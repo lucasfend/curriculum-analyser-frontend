@@ -1,0 +1,175 @@
+<main class="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8 text-slate-800">
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl shadow-slate-300/30 transition-all duration-500 overflow-hidden">
+
+        <!-- Header -->
+        <div class="p-8 text-center border-b border-slate-200">
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Analisador de Currículo com IA</h1>
+            <p class="mt-2 text-slate-500">Desafio do Prof. Maurício Asenjo</p><br/>
+            <p class="mt-2 text-slate-500">Faça aqui o upload do seu currículo e tenha uma review instantânea e vagas
+                compatíveis!</p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-8 md:p-12 min-h-[400px] flex flex-col justify-center">
+
+            <!-- Upload Inicial -->
+            <ng-container *ngIf="!isLoading() && !analysisResult()">
+                <div class="flex flex-col items-center justify-center space-y-6">
+
+                    <!-- Dropzone -->
+                    <ng-container *ngIf="!selectedFile()">
+                        <label for="file-upload"
+                               class="relative cursor-pointer w-full p-10 text-center border-2 border-dashed border-slate-300 rounded-lg transition-colors duration-300"
+                               [class.bg-sky-50]="dragOver()"
+                               [class.border-sky-400]="dragOver()"
+                               (dragover)="onDragOver($event)"
+                               (dragleave)="onDragLeave($event)"
+                               (drop)="onFileDrop($event)">
+                            <div class="flex flex-col items-center justify-center space-y-2 text-slate-500">
+                                <svg class="w-12 h-12" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/>
+                                </svg>
+                                <p class="font-semibold">
+                                    <span class="text-sky-600">Aperte aqui</span> ou arraste e solte seu .PDF
+                                </p>
+                                <p class="text-sm">Apenas PDF (máx. 5MB)</p>
+                            </div>
+                            <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".pdf"
+                                   (change)="onFileSelected($event)">
+                        </label>
+                    </ng-container>
+
+                    <!-- Arquivo Selecionado -->
+                    <ng-container *ngIf="selectedFile()">
+                        <div class="w-full p-4 border border-slate-200 bg-slate-50 rounded-lg flex items-center justify-between animate-fade-in">
+                            <div class="flex items-center space-x-3 overflow-hidden">
+                                <svg class="w-8 h-8 text-red-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a.375.375 0 01-.375-.375V6.375A3.75 3.75 0 009 2.625H5.625zM12.75 6a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h3a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-3z"/>
+                                    <path d="M8.625 3.375A2.25 2.25 0 006.375 5.625v1.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75v-1.5A2.25 2.25 0 007.125 3.41L8.625 3.375z"/>
+                                </svg>
+                                <span class="text-slate-700 font-medium truncate"
+                                      [title]="fileName()">{{ fileName() }}</span>
+                            </div>
+                            <button (click)="clearFile()"
+                                    class="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200 transition-colors flex-shrink-0">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                     fill="currentColor">
+                                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </ng-container>
+
+                    <button (click)="analyze()" [disabled]="!selectedFile()"
+                            class="w-full sm:w-auto px-8 py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 disabled:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">
+                        Analisar Currículo
+                    </button>
+
+                    <ng-container *ngIf="error()">
+                        <div class="mt-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm w-full animate-fade-in">
+                            {{ error() }}
+                        </div>
+                    </ng-container>
+
+                </div>
+            </ng-container>
+
+            <!-- Loading -->
+            <!-- Loading State -->
+            <div *ngIf="isLoading()" class="flex flex-col items-center justify-center space-y-4 animate-fade-in">
+                <svg class="animate-spin h-10 w-10 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                     viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-slate-600 font-medium">
+                    A IA está analisando seu currículo
+                    <span *ngIf="currentAgentUsedService()">
+            usando <strong>{{ currentAgentUsedService() }}</strong>
+            (tentativa {{ currentAgentAttempt() }})
+        </span>
+                    , aguarde um momento...
+                </p>
+            </div>
+
+
+            <!-- Resultado -->
+            <ng-container *ngIf="analysisResult()">
+                <div class="animate-fade-in text-left space-y-8">
+
+                    <!-- Análise -->
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">Resultado da Análise</h2>
+                        <div class="prose prose-slate max-w-none p-5 bg-slate-50 border border-slate-200 rounded-lg"
+                             [innerHTML]="formatText(analysisResult()?.agentResult.analysis)">
+                        </div>
+                    </div>
+
+                    <!-- Vagas Compatíveis -->
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">Vagas Compatíveis</h2>
+                        <div class="space-y-6">
+                            <div *ngFor="let match of analysisResult()?.matchedJobs">
+                                <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+                                    <div class="flex flex-col sm:flex-row justify-between sm:items-start mb-4">
+                                        <div>
+                                            <h3 class="text-xl font-bold text-sky-700">{{ match.job.title }}</h3>
+                                            <p class="text-slate-600 font-medium">{{ match.job.company }}</p>
+                                        </div>
+                                        <div class="mt-3 sm:mt-0 text-left sm:text-right flex-shrink-0 sm:ml-4">
+                                            <p class="text-sm font-semibold text-slate-700">Compatibilidade</p>
+                                            <p class="text-2xl font-bold text-green-600">{{ formatMatchScore(match.matchScore) }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="w-full bg-slate-200 rounded-full h-2.5 mb-6">
+                                        <div class="bg-green-500 h-2.5 rounded-full"
+                                             [style.width.%]="match.matchScore * 100"></div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                        <div>
+                                            <h4 class="font-semibold text-slate-800 mb-2 border-b pb-1">Requisitos</h4>
+                                            <div class="prose prose-sm max-w-none text-slate-600 mt-2"
+                                                 [innerHTML]="formatText(match.job.requirements)"></div>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-slate-800 mb-2 border-b pb-1">Descrição</h4>
+                                            <p class="text-slate-600 text-sm leading-relaxed mt-2">{{ match.job.description }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <ng-container *ngIf="!analysisResult()?.matchedJobs?.length">
+                                <div class="text-center p-6 bg-slate-50 rounded-lg border border-slate-200">
+                                    <p class="text-slate-600">Nenhuma vaga compatível foi encontrada com base no seu
+                                        currículo.</p>
+                                </div>
+                            </ng-container>
+                        </div>
+
+                    </div>
+
+                    <div class="pt-4 text-center">
+                        <button (click)="startOver()"
+                                class="w-full sm:w-auto px-8 py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">
+                            Analisar Outro Currículo
+                        </button>
+                    </div>
+
+                </div>
+            </ng-container>
+
+        </div>
+    </div>
+
+    <footer class="text-center mt-8 text-slate-400 text-sm">
+        <p>Construído por Lucas Ribeiro (RA: 247165), Cauê Paulino (RA: 243309), Valfrides Fernandes (RA: 242233),
+            Eduardo Santos (RA: 241590)</p>
+    </footer>
+</main>

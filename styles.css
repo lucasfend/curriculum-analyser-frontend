@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-white text-slate-800; /* Padrão (Light) */
+    }
+
+    .dark body {
+        @apply bg-slate-900 text-slate-200; /* Dark Mode */
+    }
+
+    /* Bônus: Estiliza o 'prose' do markdown */
+    .prose {
+        @apply text-slate-700;
+    }
+    .dark .prose {
+        @apply text-slate-300;
+    }
+    .dark .prose strong {
+        @apply text-slate-100;
+    }
+}
