@@ -2,13 +2,14 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {catchError, Observable, throwError} from 'rxjs';
 import {AnalysisResponse} from '../models/analysis-response.model';
+import { environment } from '../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class ResumeAnalyzerService {
     private readonly http = inject(HttpClient);
-    private readonly apiUrl = 'http://localhost:5036/api/rating/pdf';
+    private readonly apiUrl = `${environment.apiUrl}/api/rating/pdf`;
 
     analyzeResume(file: File): Observable<AnalysisResponse> {
         const formData = new FormData();
